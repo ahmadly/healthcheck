@@ -4,7 +4,7 @@ a very simple Django health check app
 
 - easy to use
 - no migration
-- no extra dependency
+- no extra dependency. only Django and Python 3.6+
 
 ## install
 
@@ -59,7 +59,9 @@ HEALTH_CHECK = [
 ]
 
 ```
+
 4. run server and go to `http://localhost:8000/health/`
+
 ```json
 {
     "uuid": "8f45499108cf4407bd3533d08fe68b26",
@@ -86,19 +88,23 @@ HEALTH_CHECK = [
     ]
 }
 ```
-- `HEALTH_CHECK_TOKEN` is optional, if you want to use token for health check, set it to a string. 
-set `Authorization` header to `Bearer <HEALTH_CHECK_TOKEN>` in request header.
+
+## options
+
+- `HEALTH_CHECK_TOKEN` is optional, if you want to use token for health check, set it to a string.
+  set `Authorization` header to `Bearer <HEALTH_CHECK_TOKEN>` in request header.
 - `HEALTH_CHECK_VIEW` is optional, if you want to use your own view, set it to a string. inherit
-from `healthcheck.views.HealthCheckView`
+  from `healthcheck.views.HealthCheckView`
 
 - `HEALTH_CHECK_FAIL_STATUS_CODE` is optional, if you want to use your own status code for fail, set it to an integer.
 - `HEALTH_CHECK_SUCCESS_STATUS_CODE` is optional, if you want to use your own status code for success, set it to an
-integer.
+  integer.
 - `HEALTH_CHECK_FORBIDDEN_STATUS_CODE` is optional, if you want to use your own status code for forbidden, set it to an
-integer.
+  integer.
 
-- `HEALTH_CHECK` is optional, if you want to use your own checks, set it to a list of strings. each string is a path to a
-function. the function should return a tuple of two items. the first item is a boolean, the second item is a string.
+- `HEALTH_CHECK` is optional, if you want to use your own checks, set it to a list of strings. each string is a path to
+  a function. the function should return a tuple of two items. the first item is a boolean, the second item is a string.
+  the boolean is the status of the check, the string is the message of the check.
 
 ```python
 def check_database_connection() -> tuple[bool, str]:
