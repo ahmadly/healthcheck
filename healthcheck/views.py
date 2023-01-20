@@ -8,10 +8,14 @@ from django.utils import timezone
 from django.utils.module_loading import import_string
 from django.views.generic import View
 
-access_token = getattr(settings, 'HEALTH_CHECK_TOKEN', None)
-fail_status_code = getattr(settings, 'HEALTH_CHECK_FAIL_STATUS_CODE', 500)
-success_status_code = getattr(settings, 'HEALTH_CHECK_SUCCESS_STATUS_CODE', 200)
-forbidden_status_code = getattr(settings, 'HEALTH_CHECK_FORBIDDEN_STATUS_CODE', 403)
+__all__ = [
+    'HealthCheckView',
+]
+
+_access_token = getattr(settings, 'HEALTH_CHECK_TOKEN', None)
+_fail_status_code = getattr(settings, 'HEALTH_CHECK_FAIL_STATUS_CODE', 500)
+_success_status_code = getattr(settings, 'HEALTH_CHECK_SUCCESS_STATUS_CODE', 200)
+_forbidden_status_code = getattr(settings, 'HEALTH_CHECK_FORBIDDEN_STATUS_CODE', 403)
 checks = getattr(
     settings,
     'HEALTH_CHECK', [
@@ -27,16 +31,16 @@ class HealthCheckView(View):
         return checks
 
     def get_access_token(self) -> Union[str, None]:
-        return access_token
+        return _access_token
 
     def get_fail_status_code(self) -> int:
-        return fail_status_code
+        return _fail_status_code
 
     def get_forbidden_status_code(self) -> int:
-        return forbidden_status_code
+        return _forbidden_status_code
 
     def get_success_status_code(self) -> int:
-        return success_status_code
+        return _success_status_code
 
     def run_check(self, check: str) -> tuple[bool, str]:
         check = import_string(check)
@@ -65,8 +69,8 @@ class HealthCheckView(View):
             return True
 
         # reject if _access_token is not set
-        _access_token = request.META.get('HTTP_AUTHORIZATION', None)
-        if not _access_token:
+        token = request.META.get('HTTP_AUTHORIZATION', None)
+        if not token:
             return False
 
         try:
