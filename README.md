@@ -27,9 +27,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    ...
     'healthcheck',
-    ...
+
 ]
     
 ```
@@ -60,8 +59,35 @@ HEALTH_CHECK = [
 ]
 
 ```
-
-- `HEALTH_CHECK_TOKEN` is optional, if you want to use token for health check, set it to a string.
+4. run server and go to `http://localhost:8000/health/`
+```json
+{
+    "uuid": "8f45499108cf4407bd3533d08fe68b26",
+    "timestamp": "2023-01-20T16:25:51.374452+00:00",
+    "hostname": "Ahmads-MBP",
+    "total_checks": 3,
+    "failed_checks": 0,
+    "results": [
+        {
+            "check": "healthcheck.checks.check_database_connection",
+            "status": true,
+            "message": "Database is reachable"
+        },
+        {
+            "check": "healthcheck.checks.check_cache_connection",
+            "status": true,
+            "message": "Cache is reachable"
+        },
+        {
+            "check": "healthcheck.checks.check_internet_connection",
+            "status": true,
+            "message": "Internet is reachable"
+        }
+    ]
+}
+```
+- `HEALTH_CHECK_TOKEN` is optional, if you want to use token for health check, set it to a string. 
+set `Authorization` header to `Bearer <HEALTH_CHECK_TOKEN>` in request header.
 - `HEALTH_CHECK_VIEW` is optional, if you want to use your own view, set it to a string. inherit
 from `healthcheck.views.HealthCheckView`
 
