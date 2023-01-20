@@ -9,8 +9,7 @@ a very simple Django health check app
 ## install
 
 ```shell
-pip install git+https://github.com/ahmadly/healthcheck/archive/refs/heads/main.zip
-
+pip install easy-health-check
 ```
 
 ## usage
