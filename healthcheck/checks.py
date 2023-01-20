@@ -1,3 +1,10 @@
+"""
+check must return a tuple of (status, message)
+check must handle exceptions internally
+check must handle timeouts internally
+"""
+
+
 def check_database_connection() -> tuple[bool, str]:
     return True, 'Database is reachable'
 

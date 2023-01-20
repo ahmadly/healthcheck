@@ -75,18 +75,27 @@ class HealthCheckView(View):
         except Exception:
             return False
 
-    def get(self, request, *args, **kwargs) -> JsonResponse:
+    def get_timestamp(self) -> str:
+        return timezone.now().isoformat()
 
+    def get_id(self) -> str:
+        return uuid.uuid4().hex
+
+    def get_hostname(self) -> str:
+        return socket.gethostname()
+
+    def get(self, request, *args, **kwargs) -> JsonResponse:
         if not self.validate_access_token(request):
             return JsonResponse(
                 {'error': 'Invalid token'},
                 status=self.get_forbidden_status_code(),
             )
+
         results, total_checks, failed_checks = self.run_checks()
         payload = {
-            'uuid': uuid.uuid4(),
-            'timestamp': timezone.now(),
-            'hostname': socket.gethostname(),
+            'uuid': self.get_id(),
+            'timestamp': self.get_timestamp(),
+            'hostname': self.get_hostname(),
             'total_checks': total_checks,
             'failed_checks': failed_checks,
             'results': results,
