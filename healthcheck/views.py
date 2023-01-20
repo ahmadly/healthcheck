@@ -8,8 +8,18 @@ from django.utils import timezone
 from django.utils.module_loading import import_string
 from django.views.generic import View
 
-checks = getattr(settings, 'HEALTH_CHECK', [])
 access_token = getattr(settings, 'HEALTH_CHECK_TOKEN', None)
+fail_status_code = getattr(settings, 'HEALTH_CHECK_FAIL_STATUS_CODE', 500)
+success_status_code = getattr(settings, 'HEALTH_CHECK_SUCCESS_STATUS_CODE', 200)
+forbidden_status_code = getattr(settings, 'HEALTH_CHECK_FORBIDDEN_STATUS_CODE', 403)
+checks = getattr(
+    settings,
+    'HEALTH_CHECK', [
+        'healthcheck.checks.check_database_connection',
+        'healthcheck.checks.check_cache_connection',
+        'healthcheck.checks.check_internet_connection',
+    ]
+)
 
 
 class HealthCheckView(View):
@@ -19,13 +29,24 @@ class HealthCheckView(View):
     def get_access_token(self) -> Union[str, None]:
         return access_token
 
+    def get_fail_status_code(self) -> int:
+        return fail_status_code
+
+    def get_forbidden_status_code(self) -> int:
+        return forbidden_status_code
+
+    def get_success_status_code(self) -> int:
+        return success_status_code
+
     def run_check(self, check: str) -> tuple[bool, str]:
         check = import_string(check)
         status, message = check()
         return status, message
 
-    def run_checks(self) -> list[dict]:
+    def run_checks(self) -> tuple[list, int, int]:
         results = []
+        total_checks = 0
+        failed_checks = 0
         for check in self.get_checks():
             status, message = self.run_check(check)
             results.append({
@@ -33,7 +54,10 @@ class HealthCheckView(View):
                 'status': status,
                 'message': message,
             })
-        return results
+            total_checks += 1
+            if not status:
+                failed_checks += 1
+        return results, total_checks, failed_checks
 
     def validate_access_token(self, request) -> bool:
         # bypass token validation if no token is set
@@ -54,13 +78,19 @@ class HealthCheckView(View):
     def get(self, request, *args, **kwargs) -> JsonResponse:
 
         if not self.validate_access_token(request):
-            return JsonResponse({'error': 'Invalid token'}, status=403)
-
+            return JsonResponse(
+                {'error': 'Invalid token'},
+                status=self.get_forbidden_status_code(),
+            )
+        results, total_checks, failed_checks = self.run_checks()
         payload = {
             'uuid': uuid.uuid4(),
-            'hostname': socket.gethostname(),
             'timestamp': timezone.now(),
-            'results': self.run_checks(),
+            'hostname': socket.gethostname(),
+            'total_checks': total_checks,
+            'failed_checks': failed_checks,
+            'results': results,
         }
-
-        return JsonResponse(payload)
+        if failed_checks:
+            return JsonResponse(payload, status=self.get_fail_status_code())
+        return JsonResponse(payload, status=self.get_success_status_code())
